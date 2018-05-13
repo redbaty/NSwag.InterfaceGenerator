@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27705.2000
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSwag.InterfaceGenerator", "NSwag.InterfaceGenerator\NSwag.InterfaceGenerator.csproj", "{AC952392-F647-4733-82A4-59EC4E45AE28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NSwag.InterfaceGenerator", "NSwag.InterfaceGenerator\NSwag.InterfaceGenerator.csproj", "{AC952392-F647-4733-82A4-59EC4E45AE28}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Proxier", "..\Proxier\Proxier\Proxier.csproj", "{83303BF6-76A9-40C7-9E9B-12016FD646EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSwag.InterfaceGenerator.Demo", "NSwag.InterfaceGenerator.Demo\NSwag.InterfaceGenerator.Demo.csproj", "{162BFCF4-3604-4644-AAE4-D0C511EDD83F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{83303BF6-76A9-40C7-9E9B-12016FD646EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83303BF6-76A9-40C7-9E9B-12016FD646EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83303BF6-76A9-40C7-9E9B-12016FD646EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{162BFCF4-3604-4644-AAE4-D0C511EDD83F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{162BFCF4-3604-4644-AAE4-D0C511EDD83F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{162BFCF4-3604-4644-AAE4-D0C511EDD83F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{162BFCF4-3604-4644-AAE4-D0C511EDD83F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
