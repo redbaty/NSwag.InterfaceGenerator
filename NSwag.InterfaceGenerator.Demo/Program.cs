@@ -1,4 +1,4 @@
-﻿using System;
+﻿using CommandLine;
 using NSwag.InterfaceGenerator.Builders;
 
 namespace NSwag.InterfaceGenerator.Demo
@@ -7,8 +7,18 @@ namespace NSwag.InterfaceGenerator.Demo
     {
         private static void Main(string[] args)
         {
-            new SwaggerInterfaceBuilder().WithUrl("http://petstore.swagger.io/v2/swagger.json").Build().Wait();
-            Console.ReadKey();
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(RunOptionsAndReturnExitCode);
+        }
+
+        private static void RunOptionsAndReturnExitCode(Options opts)
+        {
+            var builder = new SwaggerInterfaceBuilder().WithUrl(opts.SwaggerSpecification);
+
+            if (opts.CleanOutputDirectories)
+                builder.CleanOutputDirectories();
+
+            builder.CleanOutputDirectories().Build().Wait();
         }
     }
 }
