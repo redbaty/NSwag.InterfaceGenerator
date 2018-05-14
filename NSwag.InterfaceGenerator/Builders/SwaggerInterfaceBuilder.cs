@@ -24,7 +24,9 @@ namespace NSwag.InterfaceGenerator.Builders
         public DirectoryInfo OutputDirectory
         {
             get => _outputDirectory ??
-                   new DirectoryInfo($"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}\\Output");
+                   new DirectoryInfo(Path.Combine(
+                       Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) ??
+                       throw new InvalidOperationException(), "Output"));
             private set => _outputDirectory = value;
         }
 
@@ -113,9 +115,14 @@ namespace NSwag.InterfaceGenerator.Builders
             return (CompilationUnitSyntax) CSharpSyntaxTree.ParseText(code).GetRoot();
         }
 
+        private void CreateFileAndWrite(string name, string content)
+        {
+            File.WriteAllText(Path.Combine(OutputDirectory.FullName, name), content);
+        }
+
         private void WriteApiClass(Dictionary<string, string> typesChanges, string apiCode)
         {
-            File.WriteAllText($"{OutputDirectory.FullName}\\Api.cs",
+            CreateFileAndWrite("Api.cs",
                 new MethodsCollector(typesChanges).Visit(ParseSyntaxTree(apiCode)).ToString().UseClassWrapper(this));
 
             Logger.Information("API class written.");
@@ -123,7 +130,7 @@ namespace NSwag.InterfaceGenerator.Builders
 
         private void WriteExceptionClass(string exceptionClass)
         {
-            File.WriteAllText($"{OutputDirectory.FullName}\\SwaggerException.cs", exceptionClass);
+            CreateFileAndWrite("SwaggerException.cs", exceptionClass);
 
             Logger.Information("API class written.");
         }
