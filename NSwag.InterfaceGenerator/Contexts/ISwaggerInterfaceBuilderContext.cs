@@ -8,7 +8,9 @@ namespace NSwag.InterfaceGenerator.Contexts
     internal interface ISwaggerInterfaceBuilderContext
     {
         ILogger Logger { get; }
-        DirectoryInfo OutputDirectory { get; }
+        DirectoryInfo InterfaceOutputDirectory { get; }
+        DirectoryInfo ImplementationsOutputDirectory { get; }
+        DirectoryInfo GeneralOutputDirectory { get; }
         CompilationUnitSyntax Root { get; }
         SwaggerToCSharpClientGeneratorSettings Settings { get; }
         string Url { get; }
