@@ -18,16 +18,33 @@ namespace NSwag.InterfaceGenerator.Builders
 {
     public class SwaggerInterfaceBuilder : ISwaggerInterfaceBuilderContext
     {
-        private DirectoryInfo _outputDirectory;
+        private DirectoryInfo _generalOutputDirectory;
+        private DirectoryInfo _implementationsOutputDirectory;
+        private DirectoryInfo _interfaceOutputDirectory;
+
         public ILogger Logger { get; }
 
-        public DirectoryInfo OutputDirectory
+        /// <inheritdoc />
+        public DirectoryInfo InterfaceOutputDirectory
         {
-            get => _outputDirectory ??
+            get => _interfaceOutputDirectory ?? GeneralOutputDirectory.CreateSubdirectory("Interfaces");
+            private set => _interfaceOutputDirectory = value;
+        }
+
+        public DirectoryInfo ImplementationsOutputDirectory
+        {
+            get => _implementationsOutputDirectory ?? GeneralOutputDirectory.CreateSubdirectory("Implementations");
+            private set => _implementationsOutputDirectory = value;
+        }
+
+        /// <inheritdoc />
+        public DirectoryInfo GeneralOutputDirectory
+        {
+            get => _generalOutputDirectory ??
                    new DirectoryInfo(Path.Combine(
                        Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) ??
                        throw new InvalidOperationException(), "Output"));
-            private set => _outputDirectory = value;
+            private set => _generalOutputDirectory = value;
         }
 
         public CompilationUnitSyntax Root { get; private set; }
@@ -56,9 +73,38 @@ namespace NSwag.InterfaceGenerator.Builders
                          .CreateLogger();
         }
 
-        public SwaggerInterfaceBuilder WithOutput(DirectoryInfo outputDirectory)
+        public SwaggerInterfaceBuilder CleanOutputDirectories()
         {
-            OutputDirectory = outputDirectory;
+            foreach (var propertyInfo in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(i => i.PropertyType == typeof(DirectoryInfo)))
+            {
+                if (propertyInfo.GetValue(this) is DirectoryInfo val)
+                    foreach (var enumerateFile in val.EnumerateFiles())
+                    {
+                        enumerateFile.Delete();
+                    }
+            }
+
+            Logger.Information("Output folders has been cleaned.");
+
+            return this;
+        }
+
+        public SwaggerInterfaceBuilder WithInterfaceOutput(DirectoryInfo interfaceDirectory)
+        {
+            InterfaceOutputDirectory = interfaceDirectory;
+            return this;
+        }
+
+        public SwaggerInterfaceBuilder WithGeneralOutput(DirectoryInfo generalDirectory)
+        {
+            GeneralOutputDirectory = generalDirectory;
+            return this;
+        }
+
+        public SwaggerInterfaceBuilder WithImplementationsOutput(DirectoryInfo implementationsDirectory)
+        {
+            ImplementationsOutputDirectory = implementationsDirectory;
             return this;
         }
 
@@ -86,16 +132,9 @@ namespace NSwag.InterfaceGenerator.Builders
             {
                 Logger.Information("Swagger Interface Builder is starting.");
 
-                var document = await GetSwaggerSpecification();
-                var code = RunNSwag(document);
-
-                Root = ParseSyntaxTree(code);
-
+                var code = RunNSwag(await GetSwaggerSpecification());
                 var apiCode = Root.GetApiClass(this);
-
                 var assembly = await CreateAssembly(code);
-
-                EnsureDirectory();
 
                 WriteNewTypes(GetTypes(assembly));
                 WriteImplementations(GetTypes(assembly));
@@ -110,14 +149,20 @@ namespace NSwag.InterfaceGenerator.Builders
             });
         }
 
-        private static CompilationUnitSyntax ParseSyntaxTree(string code)
+        private CompilationUnitSyntax ParseSyntaxTree(string code)
         {
-            return (CompilationUnitSyntax) CSharpSyntaxTree.ParseText(code).GetRoot();
+            var compilationUnitSyntax = (CompilationUnitSyntax) CSharpSyntaxTree.ParseText(code).GetRoot();
+
+            Logger.Information("Syntax tree parsed sucessfully.");
+
+            return compilationUnitSyntax;
         }
 
         private void CreateFileAndWrite(string name, string content)
         {
-            File.WriteAllText(Path.Combine(OutputDirectory.FullName, name), content);
+            EnsureDirectory();
+
+            File.WriteAllText(Path.Combine(GeneralOutputDirectory.FullName, name), content);
         }
 
         private void WriteApiClass(Dictionary<string, string> typesChanges, string apiCode)
@@ -132,20 +177,20 @@ namespace NSwag.InterfaceGenerator.Builders
         {
             CreateFileAndWrite("SwaggerException.cs", exceptionClass);
 
-            Logger.Information("API class written.");
+            Logger.Information("API Exception class written.");
         }
 
         private void EnsureDirectory()
         {
-            if (!OutputDirectory.Exists) OutputDirectory.Create();
+            if (!ImplementationsOutputDirectory.Exists) ImplementationsOutputDirectory.Create();
 
-            Logger.Information($"Results will be written to {OutputDirectory.FullName}");
+            Logger.Information($"Results will be written to {ImplementationsOutputDirectory.FullName}");
         }
 
         private void WriteImplementations(IEnumerable<Type> types)
         {
             foreach (var type in types)
-                BuildAndWrite(type, true);
+                BuildAndWrite(type, true, ImplementationsOutputDirectory);
         }
 
         private IEnumerable<Type> GetTypes(Assembly assembly)
@@ -159,7 +204,7 @@ namespace NSwag.InterfaceGenerator.Builders
         private void WriteNewTypes(IEnumerable<Type> types)
         {
             foreach (var type in types)
-                BuildAndWrite(type, false);
+                BuildAndWrite(type, false, InterfaceOutputDirectory);
         }
 
         private async Task<Assembly> CreateAssembly(string code)
@@ -184,10 +229,13 @@ namespace NSwag.InterfaceGenerator.Builders
             var code = generator.GenerateFile().RemoveAttributes();
 
             Logger.Information("NSwagger ran sucessfully.");
+
+            Root = ParseSyntaxTree(code);
+
             return code;
         }
 
-        private void BuildAndWrite(Type type, bool implementation)
+        private void BuildAndWrite(Type type, bool implementation, DirectoryInfo toWrite)
         {
             var newTypeName = implementation ? type.Name : $"I{type.Name}";
 
@@ -201,13 +249,14 @@ namespace NSwag.InterfaceGenerator.Builders
                 if (!implementation)
                     builder.AsInterface();
 
-                File.WriteAllText($"{OutputDirectory.FullName}/{newTypeName}.cs", builder.GetAsCode());
+                File.WriteAllText(Path.Combine(toWrite.FullName, $"{newTypeName}.cs"), builder.GetAsCode());
 
                 Logger.Information($"{newTypeName} sucessfully generated.");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, $"Failed to write the type '{OutputDirectory.FullName}\\{newTypeName}'");
+                Logger.Error(ex,
+                    $"Failed to write the type '{ImplementationsOutputDirectory.FullName}\\{newTypeName}'");
             }
         }
     }
