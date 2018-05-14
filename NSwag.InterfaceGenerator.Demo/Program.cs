@@ -7,7 +7,7 @@ namespace NSwag.InterfaceGenerator.Demo
     {
         private static void Main(string[] args)
         {
-            new SwaggerInterfaceBuilder().WithUrl("http://localhost:5000/swagger/v1/swagger.json").Build().Wait();
+            new SwaggerInterfaceBuilder().WithUrl("http://petstore.swagger.io/v2/swagger.json").Build().Wait();
             Console.ReadKey();
         }
     }
