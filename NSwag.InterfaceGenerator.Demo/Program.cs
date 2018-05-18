@@ -18,6 +18,9 @@ namespace NSwag.InterfaceGenerator.Demo
             if (opts.CleanOutputDirectories)
                 builder.CleanOutputDirectories();
 
+            if (!string.IsNullOrEmpty(opts.Namespace))
+                builder.WithNamespace(opts.Namespace);
+
             builder.CleanOutputDirectories().Build().Wait();
         }
     }

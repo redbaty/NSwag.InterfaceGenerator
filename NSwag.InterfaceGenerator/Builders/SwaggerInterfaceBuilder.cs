@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NJsonSchema.CodeGeneration.CSharp;
 using NSwag.CodeGeneration.CSharp;
 using NSwag.InterfaceGenerator.Collectors;
 using NSwag.InterfaceGenerator.Contexts;
@@ -61,7 +62,8 @@ namespace NSwag.InterfaceGenerator.Builders
                 CSharpGeneratorSettings =
                 {
                     Namespace = "MyNamespace",
-                    GenerateDataAnnotations = false
+                    GenerateDataAnnotations = false,
+                    ClassStyle = CSharpClassStyle.Inpc
                 },
                 GenerateClientClasses = true,
                 GenerateExceptionClasses = true,
@@ -235,7 +237,7 @@ namespace NSwag.InterfaceGenerator.Builders
             return code;
         }
 
-        private void BuildAndWrite(Type type, bool implementation, DirectoryInfo toWrite)
+        private void BuildAndWrite(Type type, bool implementation, FileSystemInfo toWrite)
         {
             var newTypeName = implementation ? type.Name : $"I{type.Name}";
 
@@ -246,7 +248,9 @@ namespace NSwag.InterfaceGenerator.Builders
                     .Using(Settings.CSharpGeneratorSettings.Namespace)
                     .WithName(newTypeName);
 
-                if (!implementation)
+                if (implementation)
+                    builder.InheritsFrom($"I{type.Name}");
+                else
                     builder.AsInterface();
 
                 File.WriteAllText(Path.Combine(toWrite.FullName, $"{newTypeName}.cs"), builder.GetAsCode());
