@@ -21,4 +21,4 @@ Note: You can type ``` dotnet run -h ``` to get all possible arguments.
 
 
 ### Using the library
-You can see the demo code for some samples to get started on, but mostly all you need is just test it out, it has a FluentApi system to you really can't go wrong with it.
+You can see the demo code for some samples to get started on, but mostly all you need is just test it out, it has a FluentApi system too, so you really can't go wrong with it.
