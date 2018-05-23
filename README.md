@@ -18,3 +18,7 @@ dotnet run -u http://YOURSWAGGERURL
 All the other instructions are printed out to the console, so just follow them trough.
 
 Note: You can type ``` dotnet run -h ``` to get all possible arguments.
+
+
+### Using the library
+You can see the demo code for some samples to get started on, but mostly all you need is just test it out, it has a FluentApi system to you really can't go wrong with it.
