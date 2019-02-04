@@ -13,6 +13,5 @@ namespace NSwag.InterfaceGenerator.Contexts
         DirectoryInfo GeneralOutputDirectory { get; }
         CompilationUnitSyntax Root { get; }
         SwaggerToCSharpClientGeneratorSettings Settings { get; }
-        string Url { get; }
     }
 }

@@ -4,7 +4,7 @@ namespace NSwag.InterfaceGenerator.Demo
 {
     internal class Options
     {
-        [Option('u', "url", Required = true, HelpText = "The url to get the swagger specification from.")]
+        [Option('u', "url", Required = true, HelpText = "The path or url to get the swagger specification from.")]
         public string SwaggerSpecification { get; set; }
 
         [Option('n', "namespace")]

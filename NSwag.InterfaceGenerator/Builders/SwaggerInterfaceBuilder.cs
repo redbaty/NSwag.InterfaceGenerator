@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Runtime;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Newtonsoft.Json;
 using NJsonSchema.CodeGeneration.CSharp;
 using NSwag.CodeGeneration.CSharp;
 using NSwag.InterfaceGenerator.Collectors;
@@ -52,7 +57,7 @@ namespace NSwag.InterfaceGenerator.Builders
 
         public SwaggerToCSharpClientGeneratorSettings Settings { get; }
 
-        public string Url { get; private set; }
+        public string Content { get; private set; }
 
         public SwaggerInterfaceBuilder(ILogger logger = null)
         {
@@ -119,11 +124,20 @@ namespace NSwag.InterfaceGenerator.Builders
             return this;
         }
 
+        public SwaggerInterfaceBuilder WithContent(string content)
+        {
+            Content = content;
+            return this;
+        }
+
         public SwaggerInterfaceBuilder WithUrl(string url)
         {
-            Url = url;
+            using (var httpClient = new HttpClient())
+            {
+                Content = httpClient.GetStringAsync(url).Result;
+            }
 
-            Logger.Information($"Swagger will be gathered at {Url}");
+            Logger.Information($"Swagger will be gathered at {url}");
 
             return this;
         }
@@ -211,15 +225,27 @@ namespace NSwag.InterfaceGenerator.Builders
 
         private async Task<Assembly> CreateAssembly(string code)
         {
-            var assembly = await CodeManager.GenerateAssembly(code);
+            var referencedAssemblies =
+                new List<Assembly>
+                {
+                    Assembly.GetAssembly(typeof(HttpClient)), Assembly.GetAssembly(typeof(object)),
+                    Assembly.GetAssembly(typeof(AssemblyTargetedPatchBandAttribute)),
+                    Assembly.GetAssembly(typeof(INotifyPropertyChanged)),
+                    Assembly.GetAssembly(typeof(JsonConvert))
+                }.Select(i =>
+                    MetadataReference.CreateFromFile(i.Location)).ToList();
+            var assembly = await CodeManager.GenerateAssembly(code, referencedAssemblies);
 
             Logger.Information("Assembly created.");
             return assembly;
         }
 
+
         private async Task<SwaggerDocument> GetSwaggerSpecification()
         {
-            var document = await SwaggerDocument.FromUrlAsync(Url);
+            var document = Content.StartsWith("{")
+                ? await SwaggerDocument.FromJsonAsync(Content)
+                : await SwaggerYamlDocument.FromYamlAsync(Content);
 
             Logger.Information("Swagger JSON sucessfully gathered.");
             return document;

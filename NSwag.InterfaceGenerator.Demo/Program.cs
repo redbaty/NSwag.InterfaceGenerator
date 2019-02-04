@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.IO;
+using CommandLine;
 using NSwag.InterfaceGenerator.Builders;
 
 namespace NSwag.InterfaceGenerator.Demo
@@ -13,7 +14,8 @@ namespace NSwag.InterfaceGenerator.Demo
 
         private static void RunOptionsAndReturnExitCode(Options opts)
         {
-            var builder = new SwaggerInterfaceBuilder().WithUrl(opts.SwaggerSpecification);
+            var builder = new SwaggerInterfaceBuilder();
+            builder = opts.SwaggerSpecification.StartsWith("http") ? builder.WithUrl(opts.SwaggerSpecification) : builder.WithContent(File.ReadAllText(opts.SwaggerSpecification));
 
             if (opts.CleanOutputDirectories)
                 builder.CleanOutputDirectories();
